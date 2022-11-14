@@ -6,4 +6,4 @@ restClient:
   equipmentAvailabilityUrl: http://localhost:8084/v1/containerInfos
   spaceAvailabilityUrl: http://localhost:8086/v1/getspaceInfos
 server:
-  port: 8090
+  port: 8091

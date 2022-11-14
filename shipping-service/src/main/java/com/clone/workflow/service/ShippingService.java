@@ -2,6 +2,7 @@ package com.clone.workflow.service;
 
 import com.clone.workflow.domain.Od3cpRequestInfo;
 import com.clone.workflow.domain.ProductDetails;
+import com.clone.workflow.exception.ExternalServiceCallException;
 import com.clone.workflow.repository.ProductDetailRepository;
 import io.temporal.client.WorkflowException;
 import io.temporal.common.RetryOptions;
@@ -55,11 +56,10 @@ public class ShippingService {
 
 		}
 		catch (WorkflowException e) {
-			log.error("***** Exception: " + e.getMessage());
+			log.error("***** Exception occured in shipment workflow: " + e.getMessage());
 			log.error("***** Cause: " + e.getCause().getClass().getName());
 			log.error("***** Cause message: " + e.getCause().getMessage());
-			long end = System.currentTimeMillis()-start;
-			log.error("time taken to execute " + end);
+			throw new ExternalServiceCallException(e.getMessage());
 		}
 
 		if(!ObjectUtils.isEmpty(productDetail)){
@@ -108,9 +108,12 @@ public class ShippingService {
 				.setWorkflowRunTimeout(Duration.ofSeconds(50))
 				.setTaskQueue(ShippingWorkFlow.QUEUE_NAME)
                 .setWorkflowId("Order_" + id)
+//				.setRetryOptions(RetryOptions.newBuilder()
+//						.setMaximumAttempts(2).build())
 				.setRetryOptions(RetryOptions.newBuilder()
-						.setMaximumAttempts(2).build())
-				//.setDoNotRetry(NullPointerException.class.getName()).build())
+						.setMaximumAttempts(1)
+//						.setDoNotRetry(NullPointerException.class.getName())
+						.build())
 				.build();
 		return workflowClient.newWorkflowStub(ShippingWorkFlow.class, options);
     }

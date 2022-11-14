@@ -12,20 +12,20 @@ import com.clone.workflow.repository.ProductDetailRepository;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.failure.ActivityFailure;
-import io.temporal.workflow.Async;
-import io.temporal.workflow.Promise;
-import io.temporal.workflow.Workflow;
+import io.temporal.workflow.*;
 import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
 public class ShippingWorkflowImpl implements ShippingWorkFlow {
 
-	private final ActivityOptions options = ActivityOptions.newBuilder().setStartToCloseTimeout(Duration.ofSeconds(10))
+	private final ActivityOptions options = ActivityOptions.newBuilder().setScheduleToCloseTimeout(Duration.ofSeconds(50))
 			.setRetryOptions(RetryOptions.newBuilder()
-					.setMaximumAttempts(2).build())
+					.setMaximumAttempts(1).build())
 			.build();
 	private final ShippingActivity activity = Workflow.newActivityStub(ShippingActivity.class, options);
+
+//	Saga saga = new Saga(new Saga.Options.Builder().setParallelCompensation(false).build());
 
 
 	/**
@@ -38,31 +38,45 @@ public class ShippingWorkflowImpl implements ShippingWorkFlow {
 	@Override
 	public ProductDetails startWorkflow(Od3cpRequestInfo requestInfo)  {
 
-		//Workflow.sleep(Duration.ofSeconds(10));
+
+
+		//Workflow.sleep(Duration.ofSeconds(30));
 //		if(requestInfo!= null){
 //			//Workflow.wrap(new NullPointerException("null poiter exception caught..."));
-//			throw new NullPointerException("null poiter exception caught...");
+//			throw new ExternalServiceCallException("null poiter exception caught...");
 //		}
 
 		log.info("Inside startWorkflow() method");
 		log.info("Calling getRouteDetails and equipmentAvailability service in parallel");
-		Promise<RouteInfo>	possibleRoutes = null;
-		Promise<Double> equipmentAvailability = null;
+		RouteInfo possibleRoutes = null;
+		Double equipmentAvailability = null;
 		try {
 
-			possibleRoutes = Async.function(activity::getRouteDetails, requestInfo.getSource(), requestInfo.getDestination());
-			equipmentAvailability = Async.function(activity::getEquipmentAvailability,requestInfo.getSource(),requestInfo.getContainerType());
+//			possibleRoutes = Async.function(activity::getRouteDetails, requestInfo.getSource(), requestInfo.getDestination());
+//			equipmentAvailability = Async.function(activity::getEquipmentAvailability,requestInfo.getSource(),requestInfo.getContainerType());
+		/*	saga.addCompensation(() -> System.out.println(""));
+			Functions.Func<?> op = (Functions.Func<?>) possibleRoutes;
+			saga.addCompensation(op);
+		 */
+			possibleRoutes = activity.getRouteDetails(requestInfo.getSource(), requestInfo.getDestination());
+			equipmentAvailability = activity.getEquipmentAvailability(requestInfo.getSource(),requestInfo.getContainerType());
 
-		} catch (ExternalServiceCallException e) {
-			throw new ExternalServiceCallException("Exception caught while processing workflow "+e.getMessage());
 		}
-		List<RouteDTO> routeDTOList = possibleRoutes.get().getRouteList();//need to check
+
+		catch (ExternalServiceCallException e) {
+				throw new ExternalServiceCallException("Exception caught while processing booking service workflow, activity name : getRouteActivity");
+		}
+		List<RouteDTO> routeDTOList = possibleRoutes.getRouteList();
 		List<RouteDTO> availRouteList = routeDTOList;
 
-		if(!routeDTOList.isEmpty() && equipmentAvailability.get() >= requestInfo.getNoOfContainers()){
+		if(!routeDTOList.isEmpty() && equipmentAvailability >= requestInfo.getNoOfContainers()){
 			log.info("Both routes and equipment is available");
 			log.info("Calling space Availability");
-			availRouteList = activity.getSpaceAvailability(routeDTOList,requestInfo.getNoOfContainers());
+			try {
+				//availRouteList = activity.getSpaceAvailability(routeDTOList,requestInfo.getNoOfContainers());
+			} catch (ExternalServiceCallException e) {
+				throw new ExternalServiceCallException("Exception caught while processing workflow "+e.getMessage());
+			}
 			return  ProductDetails.builder()
 					.productId(requestInfo.getRequestId())
 					.equipmentAvailability(true)
