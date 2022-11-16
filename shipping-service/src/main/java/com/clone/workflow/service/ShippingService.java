@@ -108,11 +108,9 @@ public class ShippingService {
 				.setWorkflowRunTimeout(Duration.ofSeconds(50))
 				.setTaskQueue(ShippingWorkFlow.QUEUE_NAME)
                 .setWorkflowId("Order_" + id)
-//				.setRetryOptions(RetryOptions.newBuilder()
-//						.setMaximumAttempts(2).build())
 				.setRetryOptions(RetryOptions.newBuilder()
-						.setMaximumAttempts(1)
-//						.setDoNotRetry(NullPointerException.class.getName())
+						.setMaximumAttempts(2)
+						//.setDoNotRetry(NullPointerException.class.getName())
 						.build())
 				.build();
 		return workflowClient.newWorkflowStub(ShippingWorkFlow.class, options);

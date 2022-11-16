@@ -33,9 +33,6 @@ public class ShippingActivityImpl implements ShippingActivity {
     @Autowired
     private SpaceAvailbilityRestClient spaceAvailbilityRestClient;
 
-    public ShippingActivityImpl() {
-    }
-
     public ShippingActivityImpl(ActivityCompletionClient activityCompletionClient) {
         this.activityCompletionClient = activityCompletionClient;
     }
@@ -49,7 +46,7 @@ public class ShippingActivityImpl implements ShippingActivity {
     }
     @Override
     public RouteInfo getRouteDetails(String source, String destination) throws ExternalServiceCallException {
-           // sleep(10);
+
         log.info("Inside getRouteDetails() for source : {} | destination : {}", source, destination);
         ActivityExecutionContext context = Activity.getExecutionContext();
         byte[] taskToken = context.getTaskToken();

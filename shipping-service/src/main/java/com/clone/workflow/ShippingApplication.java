@@ -30,14 +30,12 @@ public class ShippingApplication {
 
 		WorkflowImplementationOptions options =
 				WorkflowImplementationOptions.newBuilder()
-						.setFailWorkflowExceptionTypes(NullPointerException.class)
-//						.setFailWorkflowExceptionTypes(RuntimeException.class)
+						//.setFailWorkflowExceptionTypes(NullPointerException.class)
 						.setFailWorkflowExceptionTypes(ExternalServiceCallException.class)
 						.build();
 
 		worker.registerWorkflowImplementationTypes(options, ShippingWorkflowImpl.class);
 		worker.registerActivitiesImplementations(signUpActivity);
-//		worker.registerActivitiesImplementations(new ShippingActivityImpl());
 		factory.start();
 	}
 }

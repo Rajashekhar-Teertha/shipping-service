@@ -8,10 +8,8 @@ import com.clone.workflow.domain.ProductDetails;
 import com.clone.workflow.domain.RouteDTO;
 import com.clone.workflow.domain.RouteInfo;
 import com.clone.workflow.exception.ExternalServiceCallException;
-import com.clone.workflow.repository.ProductDetailRepository;
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
-import io.temporal.failure.ActivityFailure;
 import io.temporal.workflow.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,13 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ShippingWorkflowImpl implements ShippingWorkFlow {
 
-	private final ActivityOptions options = ActivityOptions.newBuilder().setScheduleToCloseTimeout(Duration.ofSeconds(50))
+	private final ActivityOptions options = ActivityOptions.newBuilder().setScheduleToCloseTimeout(Duration.ofSeconds(5))
 			.setRetryOptions(RetryOptions.newBuilder()
 					.setMaximumAttempts(1).build())
 			.build();
 	private final ShippingActivity activity = Workflow.newActivityStub(ShippingActivity.class, options);
-
-//	Saga saga = new Saga(new Saga.Options.Builder().setParallelCompensation(false).build());
 
 
 	/**
@@ -39,25 +35,15 @@ public class ShippingWorkflowImpl implements ShippingWorkFlow {
 	public ProductDetails startWorkflow(Od3cpRequestInfo requestInfo)  {
 
 
-
-		//Workflow.sleep(Duration.ofSeconds(30));
-//		if(requestInfo!= null){
-//			//Workflow.wrap(new NullPointerException("null poiter exception caught..."));
-//			throw new ExternalServiceCallException("null poiter exception caught...");
-//		}
-
 		log.info("Inside startWorkflow() method");
 		log.info("Calling getRouteDetails and equipmentAvailability service in parallel");
 		RouteInfo possibleRoutes = null;
 		Double equipmentAvailability = null;
 		try {
-
+			//commenting async call for error handling
 //			possibleRoutes = Async.function(activity::getRouteDetails, requestInfo.getSource(), requestInfo.getDestination());
 //			equipmentAvailability = Async.function(activity::getEquipmentAvailability,requestInfo.getSource(),requestInfo.getContainerType());
-		/*	saga.addCompensation(() -> System.out.println(""));
-			Functions.Func<?> op = (Functions.Func<?>) possibleRoutes;
-			saga.addCompensation(op);
-		 */
+
 			possibleRoutes = activity.getRouteDetails(requestInfo.getSource(), requestInfo.getDestination());
 			equipmentAvailability = activity.getEquipmentAvailability(requestInfo.getSource(),requestInfo.getContainerType());
 
@@ -73,7 +59,7 @@ public class ShippingWorkflowImpl implements ShippingWorkFlow {
 			log.info("Both routes and equipment is available");
 			log.info("Calling space Availability");
 			try {
-				//availRouteList = activity.getSpaceAvailability(routeDTOList,requestInfo.getNoOfContainers());
+				availRouteList = activity.getSpaceAvailability(routeDTOList,requestInfo.getNoOfContainers());
 			} catch (ExternalServiceCallException e) {
 				throw new ExternalServiceCallException("Exception caught while processing workflow "+e.getMessage());
 			}
