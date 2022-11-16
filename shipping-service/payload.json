@@ -1,0 +1,99 @@
+curl --location --request POST 'localhost:8085/v1/routeInfos' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+"routeId": "1",
+"source":"Rajasthan",
+"destination":"Karnataka",
+"routeList":[
+{
+"routeName":"Gujarat",
+"vesselSize":30
+},
+{
+"routeName":"Madhya Pradesh",
+"vesselSize":50
+},
+{
+"routeName":"Maharastra",
+"vesselSize":80
+}
+]
+}'
+
+
+
+curl --location --request POST 'localhost:8084/v1/containerInfos' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+"source":"Rajasthan",
+"noOfContainers":"40",
+"containerType":"DRY"
+}'
+
+
+
+
+curl --location --request GET 'localhost:8084/v1/containerInfos' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+"id":"1",
+"source":"Rajasthan",
+"noOfContainers":"40",
+"containerType":"DRY"
+}'
+
+
+
+curl --location --request POST 'localhost:8091/bookProductSendData' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+"source": "Rajasthan",
+"srcServiceMode": "CY",
+"destination": "Karnataka",
+"destServiceMode": "SD",
+"commodityType": "Textile/fabrics",
+"containerType": "DRY",
+"containerSize": 20,
+"noOfContainers": 20,
+"cargoWeight": 20
+}'
+
+
+
+
+curl --location --request GET 'localhost:8085/v1/routeInfos?source=Rajasthan&destination=Karnataka' \
+--data-raw ''
+
+
+
+curl --location --request POST 'localhost:8086/v1/spaceInfos' \
+--header 'Content-Type: application/json' \
+--data-raw '[
+{
+"routeName": "Rajasthan",
+"vesselSize": 30.0
+},
+{
+"routeName": "Karnataka",
+"vesselSize": 80.0
+},
+{
+"routeName": "Maharashtra",
+"vesselSize": 90.0
+},
+{
+"routeName": "Bangalore",
+"vesselSize": 70.0
+},
+{
+"routeName": "Gujarat",
+"vesselSize": 40.0
+}
+]'
+
+
+
+
+
+
+curl --location -g --request GET 'localhost:8086/v1/spaceInfo?routeDTOList=[{"routeName":"Rajasthan","vesselSize":30.0}]&noOfContainers=20.0'
